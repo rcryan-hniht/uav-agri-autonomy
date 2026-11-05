@@ -10,22 +10,19 @@
 
 ## 1. Tổng quan
 
-`uav-agri-autonomy` là một monorepo nghiên cứu kéo dài trong hai học kỳ, triển khai Hệ thống Tự hành Phân cấp 3 Tầng (3-Tier Hierarchical Autonomy System) cho thiết bị bay Quadcopter hoạt động trong môi trường nông nghiệp bán cấu trúc (ruộng lúa, vườn chuối, vườn mai).
+`uav-agri-autonomy` là dự án nghiên cứu triển khai Hệ thống Tự hành Phân cấp 3 Tầng (3-Tier Hierarchical Autonomy System) cho thiết bị bay Quadcopter hoạt động trong môi trường nông nghiệp bán cấu trúc (ruộng lúa, vườn cây ăn trái, vườn cảnh).
 
-Hệ thống được thiết kế theo **Kiến trúc Lục giác (Hexagonal / Ports and Adapters Architecture)** nhằm đảm bảo toàn bộ tầng nghiệp vụ cốt lõi (`AutonomyStateMachine`, `TiltCompensator`, `APFAvoidanceController`, và `VFHPlusPlanner`) hoàn toàn độc lập với phần cứng qua cả hai giai đoạn:
-- **Giai đoạn 1 (Niên luận cơ sở ngành — Mô phỏng):** Kiểm chứng toàn diện thuật toán và kiến trúc truyền thông trên **ArduPilot SITL + Gazebo Harmonic** qua giao thức UDP MAVLink (`udpin:0.0.0.0:14550`).
-- **Giai đoạn 2 (Niên luận chuyên ngành — Phần cứng thực tế):** Triển khai trực tiếp lên máy tính nhúng **Raspberry Pi 4B** kết nối với mạch điều khiển bay **SpeedyBee F405 / Pixhawk** qua cổng UART (`921600 baud`) và cảm biến **2D Planar LiDAR $360^\circ$ (LDRobot LD19 / RPLIDAR A1)**.
+Hệ thống được thiết kế theo **Kiến trúc Lục giác (Hexagonal / Ports and Adapters Architecture)** nhằm đảm bảo toàn bộ tầng nghiệp vụ cốt lõi (`AutonomyStateMachine`, `TiltCompensator`, `APFAvoidanceController`, và `VFHPlusPlanner`) hoàn toàn độc lập với môi trường thực thi:
+- **Giai đoạn 1 (Trọng tâm hiện tại — Mô phỏng & Kiến trúc Phần mềm):** Nghiên cứu, xây dựng và kiểm chứng định lượng toàn bộ thuật toán né tránh vật cản cùng giao diện điều khiển trên môi trường mô phỏng vật lý (**ArduPilot SITL + Gazebo Harmonic**) qua giao thức UDP MAVLink (`udpin:0.0.0.0:14550`).
+- **Giai đoạn 2 (Định hướng mở rộng — Tích hợp Phần cứng Thực tế):** Chuyển đổi hệ thống từ môi trường mô phỏng sang nguyên mẫu UAV vật lý thông qua việc gắn thêm các bộ chuyển đổi (Hardware Adapters) tương thích với giao diện trừu tượng sẵn có mà không cần viết lại tầng thuật toán cốt lõi.
 
 ### Danh mục Tài liệu
-- [Yêu cầu Phần cứng, Bảng dự toán BOM & Ngăn xếp Công nghệ](docs/requirements/hardware.md)
 - [Lộ trình Phát triển Giai đoạn 1 (Mô phỏng & Kiến trúc Phần mềm)](docs/dev/phases/phase_1.md)
-- [Lộ trình Phát triển Giai đoạn 2 (Tích hợp Phần cứng Sim-to-Real)](docs/dev/phases/phase_2.md)
 - [Sơ đồ Kiến trúc Tương tác Archify — Phase 1 (Simulation)](architecture/phase/phase_1/phase_1.html)
-- [Sơ đồ Kiến trúc Tương tác Archify — Phase 2 (Real Hardware)](architecture/phase/phase_2/phase_2.html)
 
 ---
 
-## 2. Kiến trúc Hệ thống Chi tiết
+## 2. Kiến trúc Hệ thống Chi tiết (Phase 1)
 
 ### 2.1. Kiến trúc Tự hành Phân cấp 3 Tầng (3-Tier Hierarchical Autonomy)
 
@@ -41,12 +38,12 @@ flowchart TB
         UI <-->|"HTTP REST (Phân tích Khung hình)"| CropAI
     end
 
-    subgraph Tier2["TẦNG 2: MÁY TÍNH NHÚNG TRÊN DRONE (Raspberry Pi 4B / Docker Container)"]
+    subgraph Tier2["TẦNG 2: LÕI TỰ HÀNH ONBOARD COMPANION (Docker Container / Edge Process)"]
         Gateway["Cổng Giao tiếp Companion Gateway<br/>(FastAPI WebSocket :8000 + MJPEG)"]
         FSM["Máy Trạng thái Tự hành (FSM)<br/>(MANUAL | ASSISTED_AVOID | AUTO_WAYPOINT)"]
         Perception["Bộ Bù Góc nghiêng & Lọc Mặt đất<br/>(Roll/Pitch Projection)"]
         Avoidance["Bộ Thuật toán Né vật cản Kép<br/>(Trường thế APF + VFH+ 72 Góc quạt)"]
-        LidarPort["Bộ chuyển đổi ILidarPort<br/>(Gazebo Sim / Serial LD19)"]
+        LidarPort["Bộ chuyển đổi ILidarPort<br/>(SimGazeboLidarAdapter)"]
         MavBridge["Bộ chuyển đổi IFlightBridgePort<br/>(MavlinkFlightBridge)"]
         Blackbox["Hộp đen Ghi Nhật ký Chuyến bay<br/>(logs/flight_blackbox.csv)"]
 
@@ -60,19 +57,17 @@ flowchart TB
         MavBridge -->|"DroneState"| Gateway
     end
 
-    subgraph Tier1["TẦNG 1: ĐIỀU KHIỂN BAY & CẢM BIẾN (Mô phỏng Phase 1 / Phần cứng Phase 2)"]
-        FC["Mạch Điều khiển Bay ArduPilot<br/>(SITL / SpeedyBee F405)"]
-        LidarHW["Cảm biến 2D Planar LiDAR 360°<br/>(Gazebo gpu_lidar / LDRobot LD19)"]
-        Sensors["GPS M10 + La bàn + ToF VL53L1X<br/>+ 4x ESC 30A + Động cơ 2212"]
-        RC["Tay cầm Điều khiển RC An toàn<br/>(FlySky FS-i6 Chiếm quyền Khẩn cấp)"]
+    subgraph Tier1["TẦNG 1: ĐIỀU KHIỂN BAY & CẢM BIẾN (Môi trường Mô phỏng SITL / Phần cứng mở rộng)"]
+        FC["Bộ Điều khiển Bay ArduPilot<br/>(ArduCopter SITL)"]
+        LidarSim["Cảm biến Quét Laser 2D 360°<br/>(Gazebo gpu_lidar Plugin)"]
+        Dynamics["Mô hình Động lực học Quadcopter<br/>(IMU + GPS + Rangefinder + Môi trường Vườn cây)"]
 
-        FC <--> Sensors
-        RC -.->|"2.4GHz iBUS Ưu tiên Chiếm quyền"| FC
+        FC <--> Dynamics
     end
 
     UI <==>|"WebSocket JSON (Telemetry & Lệnh 20Hz)"| Gateway
-    LidarHW -->|"ROS2 Topic / UART 230400"| LidarPort
-    MavBridge <==>|"MAVLink v2 (UDP :14550 | UART /dev/ttyAMA0)"| FC
+    LidarSim -->|"Luồng dữ liệu quét 360° (10Hz)"| LidarPort
+    MavBridge <==>|"MAVLink v2 (UDP :14550)"| FC
 ```
 
 ### 2.2. Chu trình Điều khiển Thời gian thực & Luồng Dữ liệu (Sequence Diagram)
@@ -84,7 +79,7 @@ sequenceDiagram
     participant Gateway as Companion Gateway (FastAPI)
     participant FSM as Máy trạng thái & Bộ Né vật cản
     participant Lidar as Bộ chuyển đổi 2D LiDAR (ILidarPort)
-    participant FC as Flight Controller (ArduPilot)
+    participant FC as Flight Controller (ArduPilot SITL)
 
     loop Mỗi 100ms (Thu thập Cảm biến 10Hz)
         Lidar->>FSM: 1. Đọc mảng 360 khoảng cách [r_0 ... r_359]
@@ -151,8 +146,8 @@ classDiagram
     AutonomyStateMachine *-- APFAvoidanceController
     AutonomyStateMachine *-- VFHPlusPlanner
     ILidarPort <|.. SimGazeboLidarAdapter : Phase 1 (Mô phỏng)
-    ILidarPort <|.. SerialLD19LidarAdapter : Phase 2 (Phần cứng)
-    IFlightBridgePort <|.. MavlinkFlightBridge : UDP / UART MAVLink v2
+    ILidarPort <|.. HardwareLidarAdapter : Phase 2 (Định hướng mở rộng)
+    IFlightBridgePort <|.. MavlinkFlightBridge : MAVLink v2 Bridge
 ```
 
 ---
@@ -161,20 +156,19 @@ classDiagram
 
 ```text
 uav-agri-autonomy/
-├── README.md                               # Tài liệu chính (Tiếng Việt)
-├── README-us.md                            # Tài liệu tiếng Anh (English)
-├── docker-compose.sim.yml                  # Tổ hợp container SITL + Companion cho Phase 1
+├── README.md                               # Tài liệu tổng quan & thiết kế hệ thống (Tiếng Việt)
+├── architecture/
+│   └── phase/
+│       └── phase_1/
+│           └── phase_1.html                # Sơ đồ kiến trúc tương tác Archify cho Phase 1
 ├── configs/
-│   ├── simulation.yaml                     # Cấu hình Phase 1 (UDP :14550 + Gazebo LiDAR)
+│   ├── simulation.yaml                     # Cấu hình mô phỏng Phase 1 (UDP :14550 + Gazebo LiDAR)
 │   └── avoidance_params.yaml               # Tham số thuật toán APF, VFH+ và bù góc nghiêng
 ├── docs/
-│   ├── requirements/
-│   │   └── hardware.md                     # Tech Stack, dự toán BOM Phase 2 (<= 6M VNĐ), quy tắc đấu nối
 │   └── dev/
 │       └── phases/
-│           ├── phase_1.md                  # Phân rã công việc Phase 1 (Mô phỏng & Kiến trúc - Đang triển khai)
-│           └── phase_2.md                  # Phân rã công việc Phase 2 (Hướng phát triển Tích hợp Phần cứng)
-├── drone-core/                             # Gói phần mềm tự hành trên Companion Computer (Python)
+│           └── phase_1.md                  # Phân rã công việc & tiêu chí hoàn thành Phase 1
+├── drone-core/                             # Gói phần mềm tự hành cốt lõi (Python)
 │   ├── pyproject.toml
 │   ├── src/
 │   │   ├── domain/                         # Nghiệp vụ cốt lõi thuần túy (Độc lập phần cứng)
@@ -183,10 +177,10 @@ uav-agri-autonomy/
 │   │   │   ├── apf_avoidance.py            # Mode 1: Bộ điều khiển Trường thế Nhân tạo (APF)
 │   │   │   ├── vfh_planner.py              # Mode 2: Bộ hoạch định VFH+ 72 góc quạt
 │   │   │   └── state_machine.py            # Chuyển đổi chế độ bay & tổng hợp lệnh an toàn
-│   │   ├── ports/                          # Giao diện trừu tượng (Ports cho Phase 1 & Phase 2)
+│   │   ├── ports/                          # Giao diện trừu tượng (Ports)
 │   │   │   ├── lidar_port.py
 │   │   │   └── flight_bridge_port.py
-│   │   ├── adapters/                       # Các Adapter hiện hành cho Phase 1 (Simulation)
+│   │   ├── adapters/                       # Các Adapter mô phỏng cho Phase 1
 │   │   │   ├── mavlink_bridge.py
 │   │   │   └── sim_lidar_adapter.py
 │   │   ├── api/                            # Máy chủ FastAPI WebSocket & REST Gateway
@@ -212,16 +206,16 @@ uav-agri-autonomy/
 
 ---
 
-## 4. Hướng dẫn Khởi chạy & Định hướng Chuyển đổi Phase 2
+## 4. Hướng dẫn Khởi chạy & Định hướng Phát triển
 
 ### 4.1. Chạy Kiểm thử Đơn vị (Domain Unit Tests — Phase 1)
-Các thuật toán né tránh vật cản cốt lõi (`TiltCompensator`, `APFAvoidanceController`, `VFHPlusPlanner`) không phụ thuộc vào thư viện phần cứng bên ngoài và có thể kiểm chứng trực tiếp bằng Python 3:
+Các thuật toán né tránh vật cản cốt lõi (`TiltCompensator`, `APFAvoidanceController`, `VFHPlusPlanner`) không phụ thuộc vào thư viện ngoài và có thể kiểm chứng trực tiếp bằng Python 3:
 
 ```bash
 cd drone-core
 PYTHONPATH=. python3 -c "import tests.test_avoidance_domain as t; t.test_tilt_compensation_rejects_ground_hit(); t.test_apf_repulses_forward_obstacle(); t.test_vfh_bypasses_front_obstacle(); print('ALL DOMAIN TESTS PASSED')"
 ```
 
-### 4.2. Chạy Mô phỏng (Phase 1) và Hướng Mở rộng sang Phần cứng Thực tế (Phase 2)
-- **Trọng tâm hiện tại — Chế độ Mô phỏng (Phase 1):** Hệ thống khởi chạy với tệp cấu hình `configs/simulation.yaml` (kết nối `udpin:0.0.0.0:14550` tới ArduPilot SITL và bộ chuyển đổi `SimGazeboLidarAdapter`).
-- **Hướng phát triển — Chế độ Phần cứng Thực tế (Phase 2):** Nhờ giao diện trừu tượng `ILidarPort` và `IFlightBridgePort` đã định nghĩa sẵn, khi bước sang Học kỳ 2 chỉ cần bổ sung adapter phần cứng (`SerialLD19LidarAdapter` đọc cổng `/dev/ttyUSB0`) và đổi URI kết nối MAVLink sang cổng UART (`/dev/ttyAMA0` ở tốc độ `921600` baud) trên Raspberry Pi 4B mà không cần sửa đổi tầng `domain/`.
+### 4.2. Trọng tâm Phase 1 và Hướng Mở rộng sang Phase 2
+- **Giai đoạn 1 (Hiện tại):** Tập trung hoàn thiện và đánh giá thuật toán trên môi trường mô phỏng (`configs/simulation.yaml`) với bộ chuyển đổi `SimGazeboLidarAdapter` và kết nối MAVLink qua UDP.
+- **Giai đoạn 2 (Định hướng tiếp theo):** Nhờ thiết kế tách biệt qua `ILidarPort` và `IFlightBridgePort`, toàn bộ phần lõi thuật toán và giao diện điều khiển từ Giai đoạn 1 được giữ nguyên khi mở rộng sang thử nghiệm trên hệ thống nhúng thực tế ở giai đoạn sau.
