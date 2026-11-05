@@ -18,6 +18,7 @@ Hệ thống được thiết kế theo **Kiến trúc Lục giác (Hexagonal / 
 
 ### Danh mục Tài liệu
 - [Đặc tả Yêu cầu Phần mềm & Tech Stack](docs/requirements/software.md)
+- [Yêu cầu Phần cứng & BOM Dự kiến (Định hướng mở rộng)](docs/requirements/hardware.md)
 - [Lộ trình Phát triển Giai đoạn 1 (Mô phỏng & Kiến trúc Phần mềm)](docs/dev/phases/phase_1.md)
 - [Sơ đồ Kiến trúc Tương tác Archify — Phase 1 (Simulation)](architecture/phase/phase_1/phase_1.html)
 
@@ -167,6 +168,7 @@ uav-agri-autonomy/
 │   └── avoidance_params.yaml               # Tham số thuật toán APF, VFH+ và bù góc nghiêng
 ├── docs/
 │   ├── requirements/
+│   │   ├── hardware.md                     # Đặc tả phần cứng dự kiến & Tech Stack
 │   │   └── software.md                     # Đặc tả yêu cầu phần mềm, FR/NFR & Tech Stack
 │   └── dev/
 │       └── phases/
