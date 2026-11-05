@@ -17,6 +17,7 @@ Hệ thống được thiết kế theo **Kiến trúc Lục giác (Hexagonal / 
 - **Giai đoạn 2 (Định hướng mở rộng — Tích hợp Phần cứng Thực tế):** Chuyển đổi hệ thống từ môi trường mô phỏng sang nguyên mẫu UAV vật lý thông qua việc gắn thêm các bộ chuyển đổi (Hardware Adapters) tương thích với giao diện trừu tượng sẵn có mà không cần viết lại tầng thuật toán cốt lõi.
 
 ### Danh mục Tài liệu
+- [Đặc tả Yêu cầu Phần mềm & Tech Stack](docs/requirements/software.md)
 - [Lộ trình Phát triển Giai đoạn 1 (Mô phỏng & Kiến trúc Phần mềm)](docs/dev/phases/phase_1.md)
 - [Sơ đồ Kiến trúc Tương tác Archify — Phase 1 (Simulation)](architecture/phase/phase_1/phase_1.html)
 
@@ -165,6 +166,8 @@ uav-agri-autonomy/
 │   ├── simulation.yaml                     # Cấu hình mô phỏng Phase 1 (UDP :14550 + Gazebo LiDAR)
 │   └── avoidance_params.yaml               # Tham số thuật toán APF, VFH+ và bù góc nghiêng
 ├── docs/
+│   ├── requirements/
+│   │   └── software.md                     # Đặc tả yêu cầu phần mềm, FR/NFR & Tech Stack
 │   └── dev/
 │       └── phases/
 │           └── phase_1.md                  # Phân rã công việc & tiêu chí hoàn thành Phase 1
