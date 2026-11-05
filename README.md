@@ -33,7 +33,7 @@ flowchart TB
     subgraph Tier3["TẦNG 3: TRẠM ĐIỀU KHIỂN MẶT ĐẤT & AI (Linux Desktop / Web)"]
         UI["Ứng dụng Điều khiển TypeScript<br/>(React 19 + Vite + Tauri v2)"]
         RadarWidget["Bản đồ Radar 2D LiDAR & HUD Canvas<br/>(LidarRadarCanvas.tsx)"]
-        MapWidget["Bản đồ Tọa độ Waypoint GPS<br/>(Leaflet)"]
+        MapWidget["Bản đồ Tọa độ Waypoint GPS<br/>(Leaflet - MissionMap.tsx)"]
         CropAI["Dịch vụ AI Nhận diện Bệnh Cây trồng<br/>(ONNX Runtime - YOLOv8n INT8)"]
         UI --- RadarWidget
         UI --- MapWidget
@@ -42,7 +42,7 @@ flowchart TB
 
     subgraph Tier2["TẦNG 2: LÕI TỰ HÀNH ONBOARD COMPANION (Docker Container / Edge Process)"]
         Gateway["Cổng Giao tiếp Companion Gateway<br/>(FastAPI WebSocket :8000 + MJPEG)"]
-        FSM["Máy Trạng thái Tự hành (FSM)<br/>(MANUAL | ASSISTED_AVOID | AUTO_WAYPOINT)"]
+        FSM["Máy Trạng thái Tự hành (FSM)<br/>(MANUAL | ASSISTED_AVOID | AUTO_WAYPOINT | EMERGENCY_BRAKE)"]
         Perception["Bộ Bù Góc nghiêng & Lọc Mặt đất<br/>(Roll/Pitch Projection)"]
         Avoidance["Bộ Thuật toán Né vật cản Kép<br/>(Trường thế APF + VFH+ 72 Góc quạt)"]
         LidarPort["Bộ chuyển đổi ILidarPort<br/>(SimGazeboLidarAdapter)"]
@@ -159,6 +159,8 @@ classDiagram
 ```text
 uav-agri-autonomy/
 ├── README.md                               # Tài liệu tổng quan & thiết kế hệ thống (Tiếng Việt)
+├── README-us.md                            # Tài liệu tổng quan & thiết kế hệ thống (Tiếng Anh)
+├── docker-compose.sim.yml                  # Khởi chạy môi trường mô phỏng ArduPilot SITL + Companion Core
 ├── architecture/
 │   └── phase/
 │       └── phase_1/
@@ -175,7 +177,10 @@ uav-agri-autonomy/
 │           └── phase_1.md                  # Phân rã công việc & tiêu chí hoàn thành Phase 1
 ├── drone-core/                             # Gói phần mềm tự hành cốt lõi (Python)
 │   ├── pyproject.toml
+│   ├── scripts/
+│   │   └── plot_blackbox_metrics.py        # Phân tích định lượng & xuất chỉ số từ flight_blackbox.csv
 │   ├── src/
+│   │   ├── config.py                       # Composition Root: Nạp YAML & tiêm phụ thuộc (DI)
 │   │   ├── domain/                         # Nghiệp vụ cốt lõi thuần túy (Độc lập phần cứng)
 │   │   │   ├── models.py                   # LaserScan360, DroneState, VelocityCommand
 │   │   │   ├── tilt_compensator.py         # Chiếu góc Roll/Pitch & loại bỏ tia chạm đất
@@ -194,13 +199,16 @@ uav-agri-autonomy/
 │   │       └── flight_logger.py
 │   └── tests/                              # Kiểm thử đơn vị cho tầng Domain
 │       └── test_avoidance_domain.py
-├── crop-ai-service/                        # Mô-đun mở rộng: Nhận diện bệnh cây trồng (ONNX)
-│   └── inference_onnx.py
+├── crop-ai-service/                        # Mô-đun mở rộng: Nhận diện bệnh cây trồng (Edge AI / ONNX)
+│   ├── models/
+│   │   └── labels.json                     # Danh mục lớp bệnh lá cây & cấu hình ngưỡng NMS
+│   └── inference_onnx.py                   # Pipeline tiền xử lý Letterbox, suy luận ONNX CPU & NMS
 ├── ground-control-app/                     # Ứng dụng Trạm điều khiển Linux Desktop & Web (TypeScript)
 │   ├── package.json
 │   └── src/
 │       ├── components/
-│       │   └── LidarRadarCanvas.tsx        # Vẽ bản đồ Radar 360° & vector vận tốc trực quan
+│       │   ├── LidarRadarCanvas.tsx        # Vẽ bản đồ Radar 360° & vector vận tốc trực quan
+│       │   └── MissionMap.tsx              # Bản đồ tọa độ Waypoint GPS (Leaflet)
 │       ├── hooks/
 │       │   └── useDroneSocket.ts           # Hook kết nối WebSocket thời gian thực 20Hz
 │       └── types/

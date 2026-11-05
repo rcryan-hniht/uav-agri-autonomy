@@ -29,13 +29,13 @@ Tài liệu đặc tả yêu cầu phần mềm (Functional & Non-Functional Req
   4. `EMERGENCY_BRAKE`: Hủy mọi lệnh di chuyển và giữ vị trí (Hover tại chỗ với $\vec{v} = (0,0,0)$).
 - **FR-02 (Bù góc nghiêng Cảm biến - Tilt Compensation):** Chiếu dữ liệu quét laser 2D từ hệ tọa độ thân máy (*Body Frame*) sang mặt phẳng ngang (*Horizontal Local Frame*) dựa trên góc `Roll` và `Pitch` tức thời, đồng thời loại bỏ các tia chạm đất giả khi drone chúi mũi tăng tốc.
 - **FR-03 (Giám sát Kết nối An toàn - Communication Watchdog):** Tự động kích hoạt phanh an toàn (`EMERGENCY_BRAKE`) nếu không nhận được gói tin Heartbeat/Command từ ứng dụng điều khiển trong khoảng thời gian cấu hình ($1.5\text{ giây}$) khi đang ở chế độ điều khiển từ xa.
-- **FR-04 (Ghi Nhật ký Hộp đen - Flight Blackbox Logging):** Tự động ghi nhận chuỗi thời gian (`timestamp_ms`, `mode`, `roll`, `pitch`, `altitude_m`, `vx_safe`, `vy_safe`, `closest_obstacle_m`, `status_tag`) ra tệp CSV để phân tích định lượng.
+- **FR-04 (Ghi Nhật ký Hộp đen - Flight Blackbox Logging):** Tự động ghi nhận chuỗi thời gian (`timestamp_ms`, `mode`, `roll_rad`, `pitch_rad`, `altitude_m`, `vx_safe`, `vy_safe`, `closest_obstacle_m`, `status_tag`) ra tệp CSV để phân tích định lượng.
 
 ### 2.2. Phân hệ Trạm Điều khiển Mặt đất (`ground-control-app`)
 - **FR-05 (Giám sát Telemetry & HUD):** Hiển thị thời gian thực trạng thái kết nối, chế độ bay hiện hành, phần trăm pin, độ cao, vận tốc và góc tư thế (Roll/Pitch/Yaw).
 - **FR-06 (Trực quan hóa Radar Vật cản $360^\circ$):** Vẽ trực tiếp đám mây điểm khoảng cách 72 góc quạt quanh tâm drone, vòng tròn cảnh báo ($d_{\text{warn}}$), vòng tròn dừng khẩn cấp ($d_{\text{stop}}$), cùng hai vector trực quan: vận tốc mong muốn ($\vec{v}_{\text{user}}$) và vận tốc an toàn sau khi thuật toán can thiệp ($\vec{v}_{\text{safe}}$).
 - **FR-07 (Điều khiển Đa phương thức):** Cho phép gửi lệnh điều khiển vận tốc qua bàn phím (`WASD` / phím mũi tên) hoặc cần điều khiển ảo, chuyển đổi chế độ bay và chọn điểm đến (Waypoint) trên bản đồ số.
-- **FR-08 (Мо-đun Mở rộng — Nhận diện Bệnh Cây trồng):** Hiển thị luồng hình ảnh từ camera và cho phép gửi khung hình qua dịch vụ ONNX để khoanh vùng (Bounding Box) dấu hiệu bệnh trên lá cây.
+- **FR-08 (Mô-đun Mở rộng — Nhận diện Bệnh Cây trồng):** Hiển thị luồng hình ảnh từ camera và cho phép gửi khung hình qua dịch vụ ONNX để khoanh vùng (Bounding Box) dấu hiệu bệnh trên lá cây.
 
 ---
 
@@ -45,7 +45,7 @@ Tài liệu đặc tả yêu cầu phần mềm (Functional & Non-Functional Req
 | :--- | :--- | :--- | :--- |
 | **NFR-01** | **Độ trễ tính toán né vật cản (Domain Latency)** | $\le 5\text{ ms}$ cho mỗi chu kỳ `step()` trên CPU tiêu chuẩn | Đo thời gian thực thi hàm `AutonomyStateMachine.step()` bằng `pytest` / profiler. |
 | **NFR-02** | **Tần số vòng lặp điều khiển & Telemetry** | Duy trì ổn định ở $20\text{ Hz}$ (chu kỳ $50\text{ ms}$) | Kiểm tra khoảng cách `timestamp_ms` liên tiếp trong `flight_blackbox.csv`. |
-| **NFR-03** | **Tối ưu tài nguyên máy phát triển (Low-Spec Friendly)** | Tổng mức tiêu thụ RAM của SITL + Gazebo (Low-spec/Headless) + `drone-core` + GCS App $\le 4.5\text{ GB}$ | Giám sát qua `htop` trên máy cấu hình CPU tích hợp (Intel UHD Graphics). |
+| **NFR-03** | **Tối ưu tài nguyên máy phát triển (Low-Spec Friendly)** | Cụm mô phỏng SITL + Gazebo (Headless) $< 4.0\text{ GB}$ RAM; tổng toàn hệ thống (kèm `drone-core` + GCS App) $\le 4.5\text{ GB}$ RAM | Giám sát qua `htop` trên máy cấu hình CPU tích hợp (Intel UHD Graphics). |
 | **NFR-04** | **Tính độc lập phần cứng (Hexagonal Portability)** | $0$ câu lệnh import thư viện mô phỏng/phần cứng (`pymavlink`, Gazebo, serial) bên trong thư mục `drone-core/src/domain/` | Kiểm tra tĩnh mã nguồn và chạy bộ Unit Test độc lập không cần bật simulator. |
 | **NFR-05** | **Độ trễ suy luận AI trên CPU (ONNX Inference)** | $\le 80\text{ ms} / \text{frame}$ trên CPU ở độ phân giải $640 \times 640$ | Đo thời gian phản hồi của `CropDiseaseONNXInspector.analyze_frame()`. |
 
