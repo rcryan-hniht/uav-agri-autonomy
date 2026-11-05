@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Phase 1 — Simulation & Software Architecture (ArduPilot SITL + Gazebo)",
+    "locale": "en",
+    "output": "architecture/phase/phase_1/phase_1.html",
+    "quality_profile": "showcase"
+  },
+  "components": [
+    {
+      "id": "operator",
+      "type": "external",
+      "label": "Operator & Teleop",
+      "sublabel": "Keyboard / Virtual Stick",
+      "pos": [40, 220],
+      "size": [145, 62]
+    },
+    {
+      "id": "gcs_ui",
+      "type": "frontend",
+      "label": "Ground Control App",
+      "sublabel": "React + Tauri Radar",
+      "pos": [280, 220],
+      "size": [155, 62],
+      "tag": "Linux / Web"
+    },
+    {
+      "id": "crop_ai",
+      "type": "backend",
+      "label": "Crop Disease AI",
+      "sublabel": "ONNX Runtime CPU",
+      "pos": [280, 60],
+      "size": [155, 62],
+      "tag": "YOLOv8n INT8"
+    },
+    {
+      "id": "gateway",
+      "type": "backend",
+      "label": "Companion Gateway",
+      "sublabel": "FastAPI WebSocket :8000",
+      "pos": [550, 220],
+      "size": [160, 62]
+    },
+    {
+      "id": "blackbox",
+      "type": "database",
+      "label": "Flight Blackbox",
+      "sublabel": "logs/flight_blackbox.csv",
+      "pos": [550, 60],
+      "size": [160, 62]
+    },
+    {
+      "id": "fsm",
+      "type": "backend",
+      "label": "Autonomy FSM",
+      "sublabel": "Tilt + APF + VFH+",
+      "pos": [820, 220],
+      "size": [155, 62],
+      "tag": "Pure Domain"
+    },
+    {
+      "id": "sim_lidar",
+      "type": "messagebus",
+      "label": "SimGazeboLidar",
+      "sublabel": "Gazebo gpu_lidar /scan",
+      "pos": [820, 60],
+      "size": [155, 62],
+      "tag": "360° 10Hz"
+    },
+    {
+      "id": "mavlink_udp",
+      "type": "security",
+      "label": "MAVLink UDP Bridge",
+      "sublabel": "udpin:0.0.0.0:14550",
+      "pos": [1085, 220],
+      "size": [155, 62]
+    },
+    {
+      "id": "sitl_gazebo",
+      "type": "cloud",
+      "label": "ArduPilot SITL & Gazebo",
+      "sublabel": "orchard_obstacles.sdf",
+      "pos": [1085, 380],
+      "size": [155, 62],
+      "tag": "Virtual UAV"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Companion Container (drone-core - Phase 1 Simulation)",
+      "wraps": ["gateway", "blackbox", "fsm", "sim_lidar", "mavlink_udp"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "operator-to-gcs",
+      "from": "operator",
+      "to": "gcs_ui",
+      "label": "Mode & Vel",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gcs-to-crop-ai",
+      "from": "gcs_ui",
+      "to": "crop_ai",
+      "label": "Sim Frame",
+      "variant": "dashed"
+    },
+    {
+      "id": "gcs-to-gateway",
+      "from": "gcs_ui",
+      "to": "gateway",
+      "label": "WS 20Hz",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gateway-to-blackbox",
+      "from": "gateway",
+      "to": "blackbox",
+      "label": "CSV Log",
+      "variant": "dashed"
+    },
+    {
+      "id": "gateway-to-fsm",
+      "from": "gateway",
+      "to": "fsm",
+      "label": "step()",
+      "variant": "emphasis"
+    },
+    {
+      "id": "lidar-to-fsm",
+      "from": "sim_lidar",
+      "to": "fsm",
+      "label": "360° Scan"
+    },
+    {
+      "id": "fsm-to-mavlink",
+      "from": "fsm",
+      "to": "mavlink_udp",
+      "label": "Safe Vel",
+      "variant": "emphasis"
+    },
+    {
+      "id": "mavlink-to-sitl",
+      "from": "mavlink_udp",
+      "to": "sitl_gazebo",
+      "label": "UDP MAVLink",
+      "variant": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Phase 1 Simulation Environment",
+      "items": [
+        "ArduPilot SITL + Gazebo Harmonic (Headless/Low-spec) models quadcopter dynamics and orchard tree trunks",
+        "SimGazeboLidarAdapter feeds 360-degree polar scans into the hardware-agnostic domain layer"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Dual-Mode Avoidance Verification",
+      "items": [
+        "Mode 1 (Assisted Teleop): Artificial Potential Field repulses user velocity within 2.5m warning & 1.1m stop rings",
+        "Mode 2 (Auto Waypoint): 72-sector VFH+ polar histogram plans collision-free headings toward target GPS coordinates",
+        "TiltCompensator rejects false ground intersections when the simulated drone pitches forward"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Quantitative Blackbox Evaluation",
+      "items": [
+        "FlightBlackboxLogger records minimum obstacle distance, cross-track error, and loop latency to CSV",
+        "Zero-dependency domain logic prepares seamless adapter swap for Phase 2 real hardware"
+      ]
+    }
+  ]
+}

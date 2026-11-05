@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/home/killua/Projects/uav-agri-autonomy/architecture/phase/phase_1/candidate.json",
+    "sha256": "23a592413aafb0f7bb1a358aa2a4863f50da1beb3d7fca6721e101cc3fa9ee0a",
+    "bytes": 4639
+  },
+  "artifact": {
+    "path": "/home/killua/Projects/uav-agri-autonomy/architecture/phase/phase_1/phase_1.html",
+    "sha256": "8cf0b379676b150c6665b0ff09720a5853ba8451c156ed84fdd9e67e652f2c1f",
+    "bytes": 847982
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/home/killua/Projects/uav-agri-autonomy/architecture/phase/phase_1/phase_1.finalize.json",
+    "summaryReceipt": "/home/killua/Projects/uav-agri-autonomy/architecture/phase/phase_1/phase_1.finalize-summary.json",
+    "browserCheckReceipt": "/home/killua/Projects/uav-agri-autonomy/architecture/phase/phase_1/phase_1.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-05T15:04:33.728Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3246,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

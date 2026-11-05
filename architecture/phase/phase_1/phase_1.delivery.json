@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0efbf315-9bf2-4781-85b3-d6f49bbc27c3",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/home/killua/Projects/uav-agri-autonomy/architecture/phase/phase_1/candidate.json",
+  "output": "/home/killua/Projects/uav-agri-autonomy/architecture/phase/phase_1/phase_1.html",
+  "specification": {
+    "sha256": "23a592413aafb0f7bb1a358aa2a4863f50da1beb3d7fca6721e101cc3fa9ee0a",
+    "bytes": 4639
+  },
+  "artifact": {
+    "sha256": "8cf0b379676b150c6665b0ff09720a5853ba8451c156ed84fdd9e67e652f2c1f",
+    "bytes": 847982
+  }
+}

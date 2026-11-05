@@ -20,7 +20,8 @@ Hệ thống được thiết kế theo **Kiến trúc Lục giác (Hexagonal / 
 - [Yêu cầu Phần cứng, Bảng dự toán BOM & Ngăn xếp Công nghệ](docs/requirements/hardware.md)
 - [Lộ trình Phát triển Giai đoạn 1 (Mô phỏng & Kiến trúc Phần mềm)](docs/dev/phases/phase_1.md)
 - [Lộ trình Phát triển Giai đoạn 2 (Tích hợp Phần cứng Sim-to-Real)](docs/dev/phases/phase_2.md)
-- [Sơ đồ Kiến trúc Tương tác Archify HTML](.archify/architecture-uav-agri-autonomy-20261105-214900/uav-agri-autonomy.html)
+- [Sơ đồ Kiến trúc Tương tác Archify — Phase 1 (Simulation)](architecture/phase/phase_1/phase_1.html)
+- [Sơ đồ Kiến trúc Tương tác Archify — Phase 2 (Real Hardware)](architecture/phase/phase_2/phase_2.html)
 
 ---
 
